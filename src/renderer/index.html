@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self' file:; script-src 'self' file:; style-src 'self' 'unsafe-inline' file:; img-src 'self' data: blob: file: http: https:; font-src 'self' data: blob: file:; worker-src 'self' blob: file:; connect-src 'self' data: blob: file:"
+    />
+    <title>Pypr</title>
+  </head>
+  <body>
+    <header id="toolbar">
+      <div class="tb-group">
+        <button id="btn-home" class="icon" title="Home (Ctrl+L)" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block; margin: auto; pointer-events: none">
+            <path d="M3 11.5 12 4l9 7.5" />
+            <path d="M5.5 10v9.5h13V10" />
+            <path d="M10 19.5V14h4v5.5" />
+          </svg>
+        </button>
+        <button id="btn-open" title="Open PDF (Ctrl+O)">Open</button>
+        <button id="btn-article" title="Open a web article (Ctrl+Shift+O)">Article</button>
+      </div>
+      <div id="doc-title" class="tb-title"></div>
+      <div class="tb-group doc-only">
+        <button id="btn-chapters" title="Show or hide chapters (Ctrl+T)">Chapters</button>
+        <span class="tb-sep"></span>
+        <button id="btn-zoom-out" class="icon" title="Zoom out (Ctrl+-)">−</button>
+        <select id="zoom-select" title="Zoom level">
+          <option id="zoom-current" value="current" hidden>125%</option>
+          <option id="zoom-fit-page" value="page">Fit page (Ctrl+9)</option>
+          <option value="width">Fit width (Ctrl+0)</option>
+          <option value="0.5">50%</option>
+          <option value="0.75">75%</option>
+          <option value="1">100%</option>
+          <option value="1.25">125%</option>
+          <option value="1.5">150%</option>
+          <option value="2">200%</option>
+          <option value="3">300%</option>
+        </select>
+        <button id="btn-zoom-in" class="icon" title="Zoom in (Ctrl+=)">+</button>
+        <span class="tb-sep"></span>
+        <input id="page-input" type="text" inputmode="numeric" title="Go to page" />
+        <span id="page-count" class="tb-label">/ 0</span>
+        <span class="tb-sep"></span>
+        <button id="btn-marks" title="Hide or show all highlights and underlines (Ctrl+H)">Hide marks</button>
+        <button id="btn-export" title="Export highlights as Markdown">Export</button>
+        <button id="btn-sidebar" class="icon" title="Toggle highlights (Ctrl+B)">❐</button>
+      </div>
+      <div class="tb-group">
+        <button id="btn-ai" title="Choose an AI provider, model and API key">AI Explanations</button>
+        <select id="theme-select" title="Theme">
+          <option value="light">Light</option>
+          <option value="sepia">Sepia</option>
+          <option value="solarized">Solarized</option>
+          <option value="dark">Dark</option>
+          <option value="nord">Nord</option>
+          <option value="black">Black</option>
+        </select>
+        <button id="btn-invert" title="Invert pages: black background, white text (Ctrl+I)">Invert</button>
+      </div>
+    </header>
+
+    <nav id="tabs" class="hidden"></nav>
+
+    <main id="app">
+      <section id="library" class="view">
+        <div class="lib-inner">
+          <h1>Pypr</h1>
+          <p class="lib-sub">Open a paper, select text, press <kbd>1</kbd>–<kbd>4</kbd> to highlight. Everything is saved per paper.</p>
+          <div id="drop-zone">
+            <button id="btn-open-big">Open PDF</button>
+            <button id="btn-article-big">Open Article</button>
+            <span>or drag or paste a PDF or link anywhere</span>
+          </div>
+          <h2>Recent</h2>
+          <ul id="lib-list"></ul>
+          <p id="lib-empty" class="muted">No papers yet.</p>
+        </div>
+      </section>
+
+      <section id="reader" class="view hidden">
+        <aside id="chapters">
+          <div class="sb-head"><span>Chapters</span></div>
+          <ul id="ch-list"></ul>
+          <p id="ch-empty" class="muted pad hidden">No chapters found in this document.</p>
+        </aside>
+        <div id="scroller">
+          <div id="pages"></div>
+        </div>
+        <aside id="sidebar">
+          <div class="sb-head">
+            <span>Highlights <span id="hl-count" class="muted">0</span></span>
+            <div id="color-filter">
+              <button data-filter="all" class="active">All</button>
+              <button data-filter="yellow" class="dot yellow" title="Yellow"></button>
+              <button data-filter="green" class="dot green" title="Green"></button>
+              <button data-filter="blue" class="dot blue" title="Blue"></button>
+              <button data-filter="pink" class="dot pink" title="Pink"></button>
+            </div>
+          </div>
+          <ul id="hl-list"></ul>
+          <p id="hl-empty" class="muted pad">Select text in the paper to highlight it.</p>
+        </aside>
+      </section>
+    </main>
+
+    <div id="sel-toolbar" class="hidden">
+      <button id="sel-fill" class="mark-toggle active" title="Highlight on/off (H)">H</button>
+      <button id="sel-underline" class="mark-toggle u" title="Underline on/off (U)">U</button>
+      <span class="tb-sep"></span>
+      <button data-color="yellow" class="dot yellow" title="Yellow (1)"></button>
+      <button data-color="green" class="dot green" title="Green (2)"></button>
+      <button data-color="blue" class="dot blue" title="Blue (3)"></button>
+      <button data-color="pink" class="dot pink" title="Pink (4)"></button>
+      <span class="tb-sep"></span>
+      <button id="sel-note" title="Highlight + note (N)">Note</button>
+      <button id="sel-explain" title="Explain with AI (E)">Explain</button>
+      <button id="sel-copy" title="Copy (Ctrl+C)">Copy</button>
+    </div>
+
+    <dialog id="ai-dialog">
+      <form method="dialog">
+        <h3>AI Explanations</h3>
+        <label for="ai-provider">Provider</label>
+        <select id="ai-provider"></select>
+        <label for="ai-base-url">Provider link</label>
+        <input id="ai-base-url" type="text" placeholder="https://your-provider.com/v1" />
+        <label for="ai-key">API key</label>
+        <input id="ai-key" type="password" autocomplete="off" />
+        <label for="ai-model">Model</label>
+        <div class="ai-row">
+          <input id="ai-model" type="text" list="ai-models" placeholder="Latest model (leave empty)" />
+          <button id="ai-load-models" type="button">Load models</button>
+        </div>
+        <datalist id="ai-models"></datalist>
+        <span class="muted">Get an API key:</span>
+        <div id="ai-key-links"></div>
+        <p id="ai-status" class="muted"></p>
+        <div class="pw-actions">
+          <button id="ai-save" type="button">Save</button>
+          <button value="close">Close</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="explain-dialog">
+      <blockquote id="explain-quote"></blockquote>
+      <div id="explain-result"></div>
+      <div class="pw-actions">
+        <button id="explain-save" class="hidden">Save as note</button>
+        <form method="dialog"><button>Close</button></form>
+      </div>
+    </dialog>
+
+    <dialog id="url-dialog">
+      <form method="dialog">
+        <label for="url-input">Article link:</label>
+        <input id="url-input" type="text" placeholder="https://…" />
+        <div class="pw-actions">
+          <button value="ok">Open</button>
+          <button value="cancel">Cancel</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="pw-dialog">
+      <form method="dialog">
+        <label id="pw-label" for="pw-input"></label>
+        <input id="pw-input" type="password" />
+        <div class="pw-actions">
+          <button value="ok">Open</button>
+          <button value="cancel">Cancel</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div id="toast" class="hidden"></div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
